@@ -40,6 +40,7 @@
 
                     <section class="max-w-2xl mx-auto px-4">
 
+                        <div id="post-feed">
                         @forelse ($posts as $post)
                             <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 mb-6">
                                 <!-- Post Header -->
@@ -69,264 +70,110 @@
                                     </div>
                                 @endif
 
-                                <!-- Post Stats -->
                                 <p class="text-sm text-gray-500 dark:text-gray-300 mb-2">
-                                    {{ $post->likes->count() }} Likes · {{ $post->comments->count() }} Comments
+                                    <span id="likes-count-{{ $post->id }}">{{ $post->likes->count() }}</span> Likes
+                                    ·
+                                    <span
+                                        id="comments-count-{{ $post->id }}">{{ $post->comments->count() }}</span>
+                                    Comments
                                 </p>
+
+
 
                                 <!-- Post Actions -->
                                 <div
                                     class="flex justify-around border-t border-gray-300 dark:border-gray-600 pt-2 text-gray-600 dark:text-gray-300 text-sm">
-                                    <button class="hover:text-blue-600 flex items-center gap-1">👍 Like</button>
-                                    <button class="hover:text-blue-600 flex items-center gap-1">💬 Comment</button>
+
+                                    <!-- Like Button -->
+                                    <button class="hover:text-blue-600 flex items-center gap-1 like-button"
+                                        data-post-id="{{ $post->id }}">
+                                        👍 Like
+                                    </button>
+
+                                    <!-- Comment Button -->
+                                    {{-- <button class="hover:text-blue-600 flex items-center gap-1">💬 Comment</button> --}}
+
+                                    <!-- Comment Button -->
+                                    <button type="button"
+                                        class="toggle-comment-form hover:text-blue-600 flex items-center gap-1"
+                                        data-post-id="{{ $post->id }}">
+                                        💬 Comment
+                                    </button>
+
+                                    <!-- Share Button -->
                                     <button class="hover:text-blue-600 flex items-center gap-1">↗️ Share</button>
                                 </div>
+                                @php
+                                    $postId = $post->id;
+                                @endphp
+                                <div class="mt-4 space-y-2 max-h-[300px] overflow-y-auto hidden"
+                                    id="all-comments-{{ $postId }}"></div>
+                                <!-- Comments List -->
+                                <div class="mt-4 space-y-2" id="comments-section-{{ $post->id }}">
+                                    @foreach ($post->comments->take(2) as $comment)
+                                        <div class="flex items-start gap-2">
+                                            <img src="{{ $comment->user->profile_photo_url ?? asset('storage/images/3d.jpg') }}"
+                                                class="w-8 h-8 rounded-full" alt="User">
+                                            <div class="bg-gray-100 dark:bg-gray-600 rounded-lg px-3 py-2 max-w-sm">
+                                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-100">
+                                                    {{ $comment->user->name }} <span
+                                                        class="mx-4">{{ $comment->created_at->diffForHumans() }}
+                                                    </span></p>
+                                                <p class="text-sm text-gray-700 dark:text-gray-200">
+                                                    {{ $comment->comment }}</p>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <!-- View More / Show Less Buttons -->
+                                @if ($post->comments->count() > 2)
+                                    <button class="text-sm text-blue-600 mt-2 load-more-comments"
+                                        data-post-id="{{ $post->id }}">
+                                        View more comments
+                                    </button>
+                                    <button class="text-sm text-red-600 mt-2 hide-comments hidden"
+                                        data-post-id="{{ $post->id }}">
+                                        Show less
+                                    </button>
+                                @endif
+
+
+                                <!-- Comment Form -->
+                                <div class="mt-3" id="comment-form-{{ $post->id }}">
+                                    <form method="POST" action="{{ route('comments.store') }}"
+                                        class="flex gap-2 items-center ajax-comment-form"
+                                        data-post-id="{{ $post->id }}">
+                                        @csrf
+                                        <input type="hidden" name="post_id" value="{{ $post->id }}">
+                                        <input type="text" name="comment" placeholder="Write a comment..." required
+                                            class="flex-grow rounded-full border border-gray-300 dark:border-gray-600 px-4 py-2 text-sm text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-800 focus:outline-none focus:ring focus:border-blue-300">
+                                        <button type="submit"
+                                            class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-full">
+                                            Post
+                                        </button>
+                                    </form>
+                                </div>
+
+
+
+
+
+
+
                             </div>
                         @empty
                             <p class="text-center text-gray-600 dark:text-gray-300">No posts yet.</p>
                         @endforelse
+                        </div>
                     </section>
 
-
-                    {{-- <section class="max-w-2xl mx-auto px-4">
-                        <!-- Post Card -->
-                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 mb-6">
-                            <!-- Post Header -->
-                            <div class="flex items-center mb-4">
-                                <img src="{{ asset('storage/images/3d.jpg') }}" class="rounded-full w-10 h-10"
-                                    alt="User Avatar">
-                                <div class="ml-3">
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">John Doe</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-300">2 hours ago</p>
-                                </div>
-                            </div>
-
-                            <!-- Post Description -->
-                            <p class="text-gray-800 dark:text-gray-200 mb-3">
-                                Enjoying nature's beauty 🌿🌤️
-                            </p>
-
-                            <!-- Post Image -->
-                            <div class="mb-4">
-                                <img src="{{ asset('storage/images/bird.jpg') }}" alt="Post Image"
-                                    class="w-full rounded-lg">
-                            </div>
-
-                            <!-- Post Stats -->
-                            <p class="text-sm text-gray-500 dark:text-gray-300 mb-2">5 Likes · 3 Comments</p>
-
-                            <!-- Post Actions -->
-                            <div
-                                class="flex justify-around border-t border-gray-300 dark:border-gray-600 pt-2 text-gray-600 dark:text-gray-300 text-sm">
-                                <button class="hover:text-blue-600 flex items-center gap-1">👍 Like</button>
-                                <button class="hover:text-blue-600 flex items-center gap-1">💬 Comment</button>
-                                <button class="hover:text-blue-600 flex items-center gap-1">↗️ Share</button>
-                            </div>
-                        </div>
-
-                        <!-- Post Card 2 -->
-                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 mb-6">
-                            <!-- Post Header -->
-                            <div class="flex items-center mb-4">
-                                <img src="{{ asset('storage/images/3d.jpg') }}" class="rounded-full w-10 h-10"
-                                    alt="User Avatar">
-                                <div class="ml-3">
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Alice Smith</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-300">Just now</p>
-                                </div>
-                            </div>
-
-                            <!-- Post Description -->
-                            <p class="text-gray-800 dark:text-gray-200 mb-3">
-                                Throwback to my last beach trip 🌊🏖️
-                            </p>
-
-                            <!-- Post Image -->
-                            <div class="mb-4">
-                                <img src="{{ asset('storage/images/bird.jpg') }}" alt="Post Image"
-                                    class="w-full rounded-lg">
-                            </div>
-
-                            <!-- Post Stats -->
-                            <p class="text-sm text-gray-500 dark:text-gray-300 mb-2">8 Likes · 2 Comments</p>
-
-                            <!-- Post Actions -->
-                            <div
-                                class="flex justify-around border-t border-gray-300 dark:border-gray-600 pt-2 text-gray-600 dark:text-gray-300 text-sm">
-                                <button class="hover:text-blue-600 flex items-center gap-1">👍 Like</button>
-                                <button class="hover:text-blue-600 flex items-center gap-1">💬 Comment</button>
-                                <button class="hover:text-blue-600 flex items-center gap-1">↗️ Share</button>
-                            </div>
-                        </div>
-
-                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 mb-6">
-                            <!-- Post Header -->
-                            <div class="flex items-center mb-4">
-                                <img src="{{ asset('storage/images/3d.jpg') }}" class="rounded-full w-10 h-10"
-                                    alt="User Avatar">
-                                <div class="ml-3">
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Alice Smith</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-300">Just now</p>
-                                </div>
-                            </div>
-
-                            <!-- Post Description -->
-                            <p class="text-gray-800 dark:text-gray-200 mb-3">
-                                Throwback to my last beach trip 🌊🏖️
-                            </p>
-
-                            <!-- Post Image -->
-                            <div class="mb-4">
-                                <img src="{{ asset('storage/images/bird.jpg') }}" alt="Post Image"
-                                    class="w-full rounded-lg">
-                            </div>
-
-                            <!-- Post Stats -->
-                            <p class="text-sm text-gray-500 dark:text-gray-300 mb-2">8 Likes · 2 Comments</p>
-
-                            <!-- Post Actions -->
-                            <div
-                                class="flex justify-around border-t border-gray-300 dark:border-gray-600 pt-2 text-gray-600 dark:text-gray-300 text-sm">
-                                <button class="hover:text-blue-600 flex items-center gap-1">👍 Like</button>
-                                <button class="hover:text-blue-600 flex items-center gap-1">💬 Comment</button>
-                                <button class="hover:text-blue-600 flex items-center gap-1">↗️ Share</button>
-                            </div>
-                        </div>
-
-                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 mb-6">
-                            <!-- Post Header -->
-                            <div class="flex items-center mb-4">
-                                <img src="{{ asset('storage/images/3d.jpg') }}" class="rounded-full w-10 h-10"
-                                    alt="User Avatar">
-                                <div class="ml-3">
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Alice Smith</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-300">Just now</p>
-                                </div>
-                            </div>
-
-                            <!-- Post Description -->
-                            <p class="text-gray-800 dark:text-gray-200 mb-3">
-                                Throwback to my last beach trip 🌊🏖️
-                            </p>
-
-                            <!-- Post Image -->
-                            <div class="mb-4">
-                                <img src="{{ asset('storage/images/bird.jpg') }}" alt="Post Image"
-                                    class="w-full rounded-lg">
-                            </div>
-
-                            <!-- Post Stats -->
-                            <p class="text-sm text-gray-500 dark:text-gray-300 mb-2">8 Likes · 2 Comments</p>
-
-                            <!-- Post Actions -->
-                            <div
-                                class="flex justify-around border-t border-gray-300 dark:border-gray-600 pt-2 text-gray-600 dark:text-gray-300 text-sm">
-                                <button class="hover:text-blue-600 flex items-center gap-1">👍 Like</button>
-                                <button class="hover:text-blue-600 flex items-center gap-1">💬 Comment</button>
-                                <button class="hover:text-blue-600 flex items-center gap-1">↗️ Share</button>
-                            </div>
-                        </div>
-
-                        <div class="bg-white dark:bg-gray-700 rounded-lg shadow p-4 mb-6">
-                            <!-- Post Header -->
-                            <div class="flex items-center mb-4">
-                                <img src="{{ asset('storage/images/3d.jpg') }}" class="rounded-full w-10 h-10"
-                                    alt="User Avatar">
-                                <div class="ml-3">
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">Alice Smith</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-300">Just now</p>
-                                </div>
-                            </div>
-
-                            <!-- Post Description -->
-                            <p class="text-gray-800 dark:text-gray-200 mb-3">
-                                Throwback to my last beach trip 🌊🏖️
-                            </p>
-
-                            <!-- Post Image -->
-                            <div class="mb-4">
-                                <img src="{{ asset('storage/images/bird.jpg') }}" alt="Post Image"
-                                    class="w-full rounded-lg">
-                            </div>
-
-                            <!-- Post Stats -->
-                            <p class="text-sm text-gray-500 dark:text-gray-300 mb-2">8 Likes · 2 Comments</p>
-
-                            <!-- Post Actions -->
-                            <div
-                                class="flex justify-around border-t border-gray-300 dark:border-gray-600 pt-2 text-gray-600 dark:text-gray-300 text-sm">
-                                <button class="hover:text-blue-600 flex items-center gap-1">👍 Like</button>
-                                <button class="hover:text-blue-600 flex items-center gap-1">💬 Comment</button>
-                                <button class="hover:text-blue-600 flex items-center gap-1">↗️ Share</button>
-                            </div>
-                        </div>
-                    </section> --}}
 
 
                 </div>
             </div>
         </div>
     </div>
-
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-
-            async function submitForm(form, onSuccess, onError) {
-                const formData = new FormData(form);
-
-                try {
-                    const response = await fetch(form.action, {
-                        method: form.method,
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken,
-                        },
-                        body: formData,
-                    });
-
-                    const data = await response.json();
-
-                    response.ok ? onSuccess(data) : onError(data);
-                } catch (err) {
-                    console.error('Unexpected error:', err);
-                    onError({
-                        message: 'An unexpected error occurred.'
-                    });
-                }
-            }
-
-            document.querySelectorAll('form.ajax-form').forEach((form) => {
-                form.addEventListener('submit', (e) => {
-                    e.preventDefault();
-
-                    submitForm(
-                        form,
-                        (data) => {
-                            const successBox = document.getElementById('form-success-message');
-                            if (successBox) {
-                                successBox.textContent = data.message ||
-                                    'Form submitted successfully!';
-                                successBox.classList.remove('hidden');
-
-                                // Auto-hide after 3 seconds
-                                setTimeout(() => {
-                                    successBox.classList.add('hidden');
-                                    successBox.textContent = '';
-                                }, 3000);
-                            }
-
-                            form.reset();
-                        },
-                        (error) => {
-                            alert(error.message || form.dataset.error ||
-                                'Form submission failed.');
-                        }
-                    );
-                });
-            });
-        });
-    </script>
 
 
 </x-app-layout>
